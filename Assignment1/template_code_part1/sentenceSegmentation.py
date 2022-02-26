@@ -21,7 +21,7 @@ class SentenceSegmentation():
 			A list of strings where each string is a single sentence
 		"""
 
-		return text.split('.')
+		return [x.strip() for x in text.split('.') if len(x) >= 1]
 
 
 	def punkt(self, text):
