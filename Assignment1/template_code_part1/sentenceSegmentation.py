@@ -22,7 +22,7 @@ class SentenceSegmentation():
 		"""
 
 		# return [x.strip() for x in text.split('.') if len(x) >= 1]
-		return [x.strip() for x in re.split('[?.,\n\t&!]', text) if len(x) >= 1]
+		return [x.strip() for x in re.split('[?.\n\t&!]', text) if len(x) >= 1]
 
 
 	def punkt(self, text):

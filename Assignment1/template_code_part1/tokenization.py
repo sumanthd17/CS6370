@@ -2,6 +2,7 @@ from util import *
 
 # Add your import statements here
 from nltk.tokenize import TreebankWordTokenizer
+import re
 
 class Tokenization():
 
@@ -20,8 +21,13 @@ class Tokenization():
 			A list of lists where each sub-list is a sequence of tokens
 		"""
 
-		return [sentence.split(' ') for sentence in text]
-
+		# return [sentence.split(' ') for sentence in text]
+		output = []
+		for sentence in text:
+			sent = []
+			sent = re.split('[, !]', sentence)
+			output.append(sent)
+		return output
 
 
 	def pennTreeBank(self, text):
