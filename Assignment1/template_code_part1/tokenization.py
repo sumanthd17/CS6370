@@ -25,7 +25,7 @@ class Tokenization():
 		output = []
 		for sentence in text:
 			sent = []
-			sent = re.split('[, !]', sentence)
+			sent = re.split('[, !/]', sentence)
 			output.append(sent)
 		return output
 
