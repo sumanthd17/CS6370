@@ -2,7 +2,7 @@ from util import *
 
 # Add your import statements here
 from nltk.tokenize import sent_tokenize
-
+import re
 
 class SentenceSegmentation():
 
@@ -21,7 +21,8 @@ class SentenceSegmentation():
 			A list of strings where each string is a single sentence
 		"""
 
-		return [x.strip() for x in text.split('.') if len(x) >= 1]
+		# return [x.strip() for x in text.split('.') if len(x) >= 1]
+		return [x.strip() for x in re.split('[?.,\n\t&!]', text) if len(x) >= 1]
 
 
 	def punkt(self, text):
