@@ -72,43 +72,35 @@ class InformationRetrieval():
 
 		#Fill in code here
 
-		start = time.time()
-		idf = {}
+		idf = np.zeros(len(self.index.keys()))
 		n_docs = len(self.docIDs)
-		for term in self.index.keys():
-			idf[term] = math.log10(n_docs/len(self.index[term]))
-		end = time.time()
-		print("IDF built in {} seconds".format(end-start))
+		for i, term in enumerate(sorted(self.index.keys())):
+			idf[i] = math.log10(n_docs/len(self.index[term]))
 
 		tf_idf = {}
 		for id_ in self.docIDs:
-			tf_idf[id_] = {t: 0 for t in self.index}
+			tf_idf[id_] = np.zeros(len(self.index.keys()))
 
-		start = time.time()
-		for term in self.index:
+		for i, term in enumerate(sorted(self.index.keys())):
 			for doc_id, freq in self.index[term]:
-				tf_idf[doc_id][term] = idf[term]*freq
-		end = time.time()
-		print("TF-IDF built in {} seconds".format(end-start))
+				tf_idf[doc_id][i] = idf[i]*freq
 
-		print(f'Length of queruies: {len(queries)}')
 		start = time.time()
 		for q in queries:
-			q_vector = {t: 0 for t in self.index}
+			q_vector = np.zeros(len(self.index.keys()))
 			terms = [term for sent in q for term in sent]
-			term_counts = list(Counter(terms).items())
+			term_counts = list(set(list(Counter(terms).items())))
 			for term, freq in term_counts:
 				# there are new terms in the query
 				if term in self.index:
-					q_vector[term] = idf[term]*freq
+					idx = sorted(self.index.keys()).index(term)
+					q_vector[idx] = idf[idx]*freq
 
-			cos_sim = {}
-			for doc_id in self.docIDs:
-				cos_sim[doc_id] = 0
-				cos_sim[doc_id] = sum(tf_idf[doc_id][term]*q_vector[term] for term in self.index.keys()) / np.linalg.norm(list(tf_idf[doc_id].values())) * np.linalg.norm(list(q_vector.values()))
-			cos_sim_sorted = dict(sorted(cos_sim.items(), key=lambda x: x[1], reverse=True))
-			doc_IDs_ordered.append(list(cos_sim_sorted.keys()))
+			start = time.time()
 
+			tf_idf_array = np.array(list(tf_idf.values()))
+			cos_sim = np.sum(tf_idf_array * q_vector, axis=1) / (np.linalg.norm(tf_idf_array, axis=1) * np.linalg.norm(q_vector))
+			doc_IDs_ordered.append(np.argsort(cos_sim)[::-1])
 		end = time.time()
 		print("Ranking complete in {} seconds".format(end-start))
 	
