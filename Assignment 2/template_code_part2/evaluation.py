@@ -30,10 +30,13 @@ class Evaluation():
 			The precision value as a number between 0 and 1
 		"""
 
-		precision = -1
+		noOfCorrectDocsRetrieved = 0
+		true_doc_IDs_set = set(true_doc_IDs)
+		for docID in query_doc_IDs_ordered[:k]:
+			if int(docID) in true_doc_IDs_set:
+				noOfCorrectDocsRetrieved += 1
 
-		#Fill in code here
-
+		precision = noOfCorrectDocsRetrieved/k
 		return precision
 
 
@@ -62,11 +65,18 @@ class Evaluation():
 			The mean precision value as a number between 0 and 1
 		"""
 
-		meanPrecision = -1
+		noOfQueries = len(query_ids)
+		precisions = []
 
-		#Fill in code here
+		for i in range(noOfQueries):
+			query_doc_IDs_ordered = doc_IDs_ordered[i]
+			query_id = int(query_ids[i])
+			# Fetch the true doc IDs from cran_qrels.json
+			true_doc_IDs = [ int(qrel["id"]) for qrel in qrels if int(qrel["query_num"]) == query_id ]
+			precision = self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, k)
+			precisions.append(precision)
 
-		return meanPrecision
+		return sum(precisions)/len(precisions)
 
 	
 	def queryRecall(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
