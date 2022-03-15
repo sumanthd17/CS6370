@@ -30,8 +30,15 @@ class Evaluation():
         float
             The precision value as a number between 0 and 1
         """
+        query_doc_IDs_ordered_list = []
+        for i in query_doc_IDs_ordered:
+            query_doc_IDs_ordered_list.append(str(i))
 
-        retrived_at_k_intersection_relavent_count = len(set(query_doc_IDs_ordered[:k]).intersection(true_doc_IDs)
+        true_doc_IDs_list = []
+        for i in true_doc_IDs:
+            true_doc_IDs_list.append(str(i))
+
+        retrived_at_k_intersection_relavent_count = len(set(query_doc_IDs_ordered_list[:k]).intersection(true_doc_IDs_list))
 
         # Fill in code here
 
@@ -69,11 +76,11 @@ class Evaluation():
 
         qrel_list = []
         for query_id in query_ids:
-            qrel_list.append(qrel_dict[query_id])
+            qrel_list.append(qrel_dict[str(query_id)])
 
         precisons = []
         for retrived, query_id, relavent in zip(doc_IDs_ordered, query_ids, qrel_list):
-            precisons.append(self.queryPrecision(retrived, query_id, relavent))
+            precisons.append(self.queryPrecision(retrived, query_id, relavent,k))
 
         # Fill in code here
 
@@ -102,7 +109,15 @@ class Evaluation():
             The recall value as a number between 0 and 1
         """
 
-        retrived_at_k_intersection_relavent_count = len(set(query_doc_IDs_ordered[:k]).intersection(true_doc_IDs))
+        query_doc_IDs_ordered_list = []
+        for i in query_doc_IDs_ordered:
+            query_doc_IDs_ordered_list.append(str(i))
+
+        true_doc_IDs_list = []
+        for i in true_doc_IDs:
+            true_doc_IDs_list.append(str(i))
+
+        retrived_at_k_intersection_relavent_count = len(set(query_doc_IDs_ordered_list[:k]).intersection(true_doc_IDs_list))
 
         # Fill in code here
 
@@ -141,11 +156,11 @@ class Evaluation():
 
         qrel_list = []
         for query_id in query_ids:
-            qrel_list.append(qrel_dict[query_id])
+            qrel_list.append(qrel_dict[str(query_id)])
 
         recalls = []
         for retrived, query_id, relavent in zip(doc_IDs_ordered, query_ids, qrel_list):
-            recalls.append(self.queryRecall(retrived, query_id, relavent))
+            recalls.append(self.queryRecall(retrived, query_id, relavent,k))
 
         # Fill in code here
 
@@ -174,10 +189,11 @@ class Evaluation():
             The fscore value as a number between 0 and 1
         """
 
-        precison = self.queryPrecision(query_doc_IDs_ordered,query_id,true_doc_IDs)
-        recall = self.queryRecall(query_doc_IDs_ordered,query_id,true_doc_IDs)
+        precison = self.queryPrecision(query_doc_IDs_ordered,query_id,true_doc_IDs,k)
+        recall = self.queryRecall(query_doc_IDs_ordered,query_id,true_doc_IDs,k)
 
-
+        if precison == 0 and recall == 0:
+            return 0
         # Fill in code here
 
         return 2 * precison * recall / precison + recall
@@ -207,48 +223,23 @@ class Evaluation():
             The mean fscore value as a number between 0 and 1
         """
 
-        def meanRecall(self, doc_IDs_ordered, query_ids, qrels, k):
-            """
-            Computation of recall of the Information Retrieval System
-            at a given value of k, averaged over all the queries
+        qrel_dict = {}
+        for key, value in groupby(qrels,
+                                  key=itemgetter('query_num')):
+            ordered_res = [res['id'] for res in sorted(value, key=itemgetter('position'))]
+            qrel_dict[key] = ordered_res
 
-            Parameters
-            ----------
-            arg1 : list
-                A list of lists of integers where the ith sub-list is a list of IDs
-                of documents in their predicted order of relevance to the ith query
-            arg2 : list
-                A list of IDs of the queries for which the documents are ordered
-            arg3 : list
-                A list of dictionaries containing document-relevance
-                judgements - Refer cran_qrels.json for the structure of each
-                dictionary
-            arg4 : int
-                The k value
+        qrel_list = []
+        for query_id in query_ids:
+            qrel_list.append(qrel_dict[str(query_id)])
 
-            Returns
-            -------
-            float
-                The mean recall value as a number between 0 and 1
-            """
+        f1s = []
+        for retrived, query_id, relavent in zip(doc_IDs_ordered, query_ids, qrel_list):
+            f1s.append(self.queryFscore(retrived, query_id, relavent,k))
 
-            qrel_dict = {}
-            for key, value in groupby(qrels,
-                                      key=itemgetter('query_num')):
-                ordered_res = [res['id'] for res in sorted(value, key=itemgetter('position'))]
-                qrel_dict[key] = ordered_res
+        # Fill in code here
 
-            qrel_list = []
-            for query_id in query_ids:
-                qrel_list.append(qrel_dict[query_id])
-
-            f1s = []
-            for retrived, query_id, relavent in zip(doc_IDs_ordered, query_ids, qrel_list):
-                f1s.append(self.queryRecall(retrived, query_id, relavent))
-
-            # Fill in code here
-
-            return np.mean(f1s)
+        return np.mean(f1s)
 
     def queryNDCG(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
         """
