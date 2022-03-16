@@ -4,7 +4,7 @@ from util import *
 from itertools import groupby
 from operator import itemgetter
 import numpy as np
-
+from math import log2
 
 class Evaluation():
 
@@ -264,11 +264,35 @@ class Evaluation():
             The nDCG value as a number between 0 and 1
         """
 
-        nDCG = -1
+        rel_vals = {}
+        rel_docs = []
+        DCGk = 0
+        IDCGk = 0
 
-        # Fill in code here
+        # Capture (ground truth) relevance values for queries in question
+        for true_doc in true_doc_IDs:
+            if int(query_id) == int(true_doc["query_num"]):
+                docID = int(true_doc["id"])
+                rel_docs.append(docID)
+                relevance = 5 - true_doc["position"]
+                rel_vals[docID] = relevance
 
-        return nDCG
+        # Compute DCGk for predicted order of relevance to a query
+        for i in range(1, k+1):
+            docID = int(query_doc_IDs_ordered[i-1])
+            if docID in rel_docs:
+                relevance = rel_vals[docID]
+                DCGk += (2**relevance - 1) / log2(i+1)
+
+        # Compute IDCGK for ideal order of relevance to a query
+        ideal_order = sorted(rel_vals.values(), reverse=True)
+        no_of_rel_docs = len(ideal_order)
+        for i in range(1, min(no_of_rel_docs, k) + 1):
+            relevance = ideal_order[i-1]
+            IDCGk += (2**relevance - 1) / log2(i+1)
+
+        nDCGk = DCGk/IDCGk
+        return nDCGk
 
     def meanNDCG(self, doc_IDs_ordered, query_ids, qrels, k):
         """
@@ -295,12 +319,18 @@ class Evaluation():
             The mean nDCG value as a number between 0 and 1
         """
 
-        meanNDCG = -1
+        nDCGs = []
+        no_of_queries = len(query_ids)
 
-        # Fill in code here
-
-        return meanNDCG
-
+        # Compute nDCG for each query
+        for i in range(no_of_queries):
+            query_doc_IDs_ordered = doc_IDs_ordered[i]
+            query_id = int(query_ids[i])
+            nDCG = self.queryNDCG(query_doc_IDs_ordered, query_id, qrels, k)
+            nDCGs.append(nDCG)
+        
+        return sum(nDCGs)/len(nDCGs)
+        
     def queryAveragePrecision(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
         """
         Computation of average precision of the Information Retrieval System
