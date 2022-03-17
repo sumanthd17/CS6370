@@ -39,10 +39,7 @@ class Evaluation():
             true_doc_IDs_list.append(str(i))
 
         retrived_at_k_intersection_relavent_count = len(set(query_doc_IDs_ordered_list[:k]).intersection(true_doc_IDs_list))
-
-        # Fill in code here
-
-        return retrived_at_k_intersection_relavent_count / len(query_doc_IDs_ordered)
+        return retrived_at_k_intersection_relavent_count / k
 
     def meanPrecision(self, doc_IDs_ordered, query_ids, qrels, k):
         """
