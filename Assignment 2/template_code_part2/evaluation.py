@@ -300,26 +300,7 @@ class Evaluation():
             The average precision value as a number between 0 and 1
         """
 
-        # precision_vals = []
         rel_vals = []
-
-        # # Calculate precision at i recommendations for the query
-        # for i in range(1, k+1):
-        #     precision_at_i = self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, i)
-        #     precision_vals.append(precision_at_i)
-
-        # # Compute the predicted document is relevant or not
-        # for docID in query_doc_IDs_ordered:
-        #     rel_vals.append(1 if int(docID) in true_doc_IDs else 0)
-
-        # # Compute product of precision and relevance at i
-        # prod_of_precision_and_rel_at_i = []
-        # for i in range(k):
-        #     prod_of_precision_and_rel_at_i.append(precision_vals[i] * rel_vals[i])
-
-        # averagePrecision = sum(prod_of_precision_and_rel_at_i) / len(true_doc_IDs)
-        # return averagePrecision
-
         for i in range(k):
             if query_doc_IDs_ordered[i] in true_doc_IDs:
                 rel_vals.append(i)
