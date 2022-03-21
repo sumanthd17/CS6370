@@ -100,6 +100,8 @@ class InformationRetrieval():
 
 			tf_idf_array = np.array(list(tf_idf.values()))
 			cos_sim = np.sum(tf_idf_array * q_vector, axis=1) / (np.linalg.norm(tf_idf_array, axis=1) * np.linalg.norm(q_vector))
+			# Replace nan with 0
+			cos_sim[np.isnan(cos_sim)] = 0
 			doc_IDs_ordered.append(np.argsort(cos_sim)[::-1])
 		end = time.time()
 		print("Ranking complete in {} seconds".format(end-start))
