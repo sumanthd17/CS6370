@@ -301,26 +301,31 @@ class Evaluation():
             The average precision value as a number between 0 and 1
         """
 
-        precision_vals = []
-        rel_vals = []
+        # precision_vals = []
+        # rel_vals = []
 
-        # Calculate precision at i recommendations for the query
+        # # Calculate precision at i recommendations for the query
+        # for i in range(1, k+1):
+        #     precision_at_i = self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, i)
+        #     precision_vals.append(precision_at_i)
+
+        # # Compute the predicted document is relevant or not
+        # for docID in query_doc_IDs_ordered:
+        #     rel_vals.append(1 if int(docID) in true_doc_IDs else 0)
+
+        # # Compute product of precision and relevance at i
+        # prod_of_precision_and_rel_at_i = []
+        # for i in range(k):
+        #     prod_of_precision_and_rel_at_i.append(precision_vals[i] * rel_vals[i])
+
+        # averagePrecision = sum(prod_of_precision_and_rel_at_i) / len(true_doc_IDs)
+        # return averagePrecision
+
+        precisions = []
         for i in range(1, k+1):
-            precision_at_i = self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, i)
-            precision_vals.append(precision_at_i)
+            precisions.append(self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, i))
 
-        # Compute the predicted document is relevant or not
-        for docID in query_doc_IDs_ordered:
-            rel_vals.append(1 if int(docID) in true_doc_IDs else 0)
-
-        # Compute product of precision and relevance at i
-        prod_of_precision_and_rel_at_i = []
-        for i in range(k):
-            prod_of_precision_and_rel_at_i.append(precision_vals[i] * rel_vals[i])
-
-        averagePrecision = sum(prod_of_precision_and_rel_at_i) / len(true_doc_IDs)
-        return averagePrecision
-
+        return np.mean(precisions)
 
     def meanAveragePrecision(self, doc_IDs_ordered, query_ids, q_rels, k):
         """
@@ -348,19 +353,8 @@ class Evaluation():
         """
 
         averagePrecisions = []
-
         for i in range(len(query_ids)):
-            query_doc_IDs_ordered = doc_IDs_ordered[i]
-            query_id = int(query_ids[i])
-            
-            # Capture all true relevant documents for this query 
-            true_doc_IDs = []
-            for q_rel in q_rels:
-                if query_id == int(q_rel["query_num"]):
-                    true_doc_IDs.append(int(q_rel["id"]))
-
             # Compute average precision for each query
-            averagePrecision = self.queryAveragePrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, k)
-            averagePrecisions.append(averagePrecision)
+            averagePrecisions.append(self.queryAveragePrecision(doc_IDs_ordered[i], query_ids[i], get_relevant_docs(query_ids[i], q_rels), k))
         
-        return sum(averagePrecisions)/len(averagePrecisions)
+        return sum(averagePrecisions)/len(query_ids)
