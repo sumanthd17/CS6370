@@ -209,35 +209,30 @@ class Evaluation():
             The nDCG value as a number between 0 and 1
         """
 
-        rel_vals = {}
-        rel_docs = []
         DCGk = 0
         IDCGk = 0
+        docs = query_doc_IDs_ordered[:k]
 
-        # Capture (ground truth) relevance values for queries in question
-        for true_doc in true_doc_IDs:
-            if int(query_id) == int(true_doc["query_num"]):
-                docID = int(true_doc["id"])
-                rel_docs.append(docID)
-                relevance = 5 - true_doc["position"]
-                rel_vals[docID] = relevance
+        for idx in range(1, k + 1):
+            doc_rel = 0
+            prev_idx = idx - 1
+            if docs[prev_idx] in true_doc_IDs:
+                doc_rel = self.true_docs_rels[true_doc_IDs.index(docs[prev_idx])]
+            DCGk += doc_rel / log2(idx + 1)
 
-        # Compute DCGk for predicted order of relevance to a query
-        for i in range(1, k+1):
-            docID = int(query_doc_IDs_ordered[i-1])
-            if docID in rel_docs:
-                relevance = rel_vals[docID]
-                DCGk += (2**relevance - 1) / log2(i+1)
+        true_rels = self.true_docs_rels.copy()
+        if len(true_rels) < k:
+            for idx in range(len(true_rels), k):
+                true_rels.append(0)
 
-        # Compute IDCGK for ideal order of relevance to a query
-        ideal_order = sorted(rel_vals.values(), reverse=True)
-        no_of_rel_docs = len(ideal_order)
-        for i in range(1, min(no_of_rel_docs, k) + 1):
-            relevance = ideal_order[i-1]
-            IDCGk += (2**relevance - 1) / log2(i+1)
+        IDCGk = sum([true_rels[idx - 1] / log2(idx + 1) for idx in range(1, k + 1)])
 
-        nDCGk = DCGk/IDCGk
-        return nDCGk
+        if IDCGk == 0:
+            return 0
+
+        nDCG = DCGk / IDCGk
+
+        return nDCG
 
     def meanNDCG(self, doc_IDs_ordered, query_ids, qrels, k):
         """
@@ -264,17 +259,31 @@ class Evaluation():
             The mean nDCG value as a number between 0 and 1
         """
 
-        nDCGs = []
-        no_of_queries = len(query_ids)
+        NDCG_arr = []
+        for idx, query_id in enumerate(query_ids):
+            query_doc_IDs_ordered = doc_IDs_ordered[idx]
+            # we need to store position to sort the relevant docs by position
+            relevant_docs = [
+                (d["position"], int(d["id"]))
+                for d in qrels
+                if d["query_num"] == str(query_id)
+            ]
+            if len(relevant_docs) == 0:
+                print("No relevant docs found for query: ", query_id)
 
-        # Compute nDCG for each query
-        for i in range(no_of_queries):
-            query_doc_IDs_ordered = doc_IDs_ordered[i]
-            query_id = int(query_ids[i])
-            nDCG = self.queryNDCG(query_doc_IDs_ordered, query_id, qrels, k)
-            nDCGs.append(nDCG)
-        
-        return sum(nDCGs)/len(nDCGs)
+            # sort by position
+            relevant_docs.sort()
+
+            self.true_docs_rels = [5 - ele[0] for ele in relevant_docs]
+            # we only need the doc_id
+            true_doc_IDs = [ele[1] for ele in relevant_docs]
+
+            # get precision@k and add it to the sum
+            NDCG_arr.append(self.queryNDCG(query_doc_IDs_ordered, query_id, true_doc_IDs, k))
+
+        meanNDCG = np.sum(NDCG_arr) / len(query_ids)
+
+        return meanNDCG
         
     def queryAveragePrecision(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
         """
