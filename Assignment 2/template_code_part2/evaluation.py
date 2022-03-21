@@ -62,11 +62,10 @@ class Evaluation():
             The mean precision value as a number between 0 and 1
         """
         # Fill in code here
-        sum_precision = 0
+        precisions = []
         for idx in range(len(query_ids)):
-            sum_precision += self.queryPrecision(doc_IDs_ordered[idx], query_ids[idx], get_relevant_docs(query_ids[idx], qrels), k)
-        meanPrecision = sum_precision / len(query_ids)
-        return meanPrecision
+            precisions.append(self.queryPrecision(doc_IDs_ordered[idx], query_ids[idx], get_relevant_docs(query_ids[idx], qrels), k))
+        return np.mean(precisions)
 
     def queryRecall(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
         """
@@ -302,7 +301,7 @@ class Evaluation():
         """
 
         # precision_vals = []
-        # rel_vals = []
+        rel_vals = []
 
         # # Calculate precision at i recommendations for the query
         # for i in range(1, k+1):
@@ -321,11 +320,18 @@ class Evaluation():
         # averagePrecision = sum(prod_of_precision_and_rel_at_i) / len(true_doc_IDs)
         # return averagePrecision
 
-        precisions = []
-        for i in range(1, k+1):
-            precisions.append(self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, i))
+        for i in range(k):
+            if query_doc_IDs_ordered[i] in true_doc_IDs:
+                rel_vals.append(i)
 
-        return np.mean(precisions)
+        if len(rel_vals) == 0:
+            return 0
+        
+        precisions = []
+        for i in rel_vals:
+            precisions.append(self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, i+1))
+
+        return np.sum(precisions) / len(rel_vals)
 
     def meanAveragePrecision(self, doc_IDs_ordered, query_ids, q_rels, k):
         """
@@ -357,4 +363,4 @@ class Evaluation():
             # Compute average precision for each query
             averagePrecisions.append(self.queryAveragePrecision(doc_IDs_ordered[i], query_ids[i], get_relevant_docs(query_ids[i], q_rels), k))
         
-        return sum(averagePrecisions)/len(query_ids)
+        return np.mean(averagePrecisions)
