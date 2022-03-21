@@ -1,4 +1,4 @@
-from util import *
+from util import get_relevant_docs
 
 # Add your import statements here
 from itertools import groupby
@@ -16,30 +16,26 @@ class Evaluation():
         Parameters
         ----------
         arg1 : list
-            A list of integers denoting the IDs of documents in
-            their predicted order of relevance to a query
+                A list of integers denoting the IDs of documents in
+                their predicted order of relevance to a query
         arg2 : int
-            The ID of the query in question
+                The ID of the query in question
         arg3 : list
-            The list of IDs of documents relevant to the query (ground truth)
+                The list of IDs of documents relevant to the query (ground truth)
         arg4 : int
-            The k value
+                The k value
 
         Returns
         -------
         float
-            The precision value as a number between 0 and 1
+                The precision value as a number between 0 and 1
         """
-        query_doc_IDs_ordered_list = []
-        for i in query_doc_IDs_ordered:
-            query_doc_IDs_ordered_list.append(str(i))
 
-        true_doc_IDs_list = []
-        for i in true_doc_IDs:
-            true_doc_IDs_list.append(str(i))
+        precision = 0
 
-        retrived_at_k_intersection_relavent_count = len(set(query_doc_IDs_ordered_list[:k]).intersection(true_doc_IDs_list))
-        return retrived_at_k_intersection_relavent_count / k
+        # Fill in code here
+        precision = len(list(set(query_doc_IDs_ordered[:k]).intersection(true_doc_IDs))) / k
+        return precision
 
     def meanPrecision(self, doc_IDs_ordered, query_ids, qrels, k):
         """
@@ -65,23 +61,12 @@ class Evaluation():
         float
             The mean precision value as a number between 0 and 1
         """
-        qrel_dict = {}
-        for key, value in groupby(qrels,
-                                  key=itemgetter('query_num')):
-            ordered_res = [res['id'] for res in sorted(value, key=itemgetter('position'))]
-            qrel_dict[key] = ordered_res
-
-        qrel_list = []
-        for query_id in query_ids:
-            qrel_list.append(qrel_dict[str(query_id)])
-
-        precisons = []
-        for retrived, query_id, relavent in zip(doc_IDs_ordered, query_ids, qrel_list):
-            precisons.append(self.queryPrecision(retrived, query_id, relavent,k))
-
         # Fill in code here
-
-        return np.mean(precisons)
+        sum_precision = 0
+        for idx in range(len(query_ids)):
+            sum_precision += self.queryPrecision(doc_IDs_ordered[idx], query_ids[idx], get_relevant_docs(query_ids[idx], qrels), k)
+        meanPrecision = sum_precision / len(query_ids)
+        return meanPrecision
 
     def queryRecall(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
         """
@@ -105,20 +90,9 @@ class Evaluation():
         float
             The recall value as a number between 0 and 1
         """
-
-        query_doc_IDs_ordered_list = []
-        for i in query_doc_IDs_ordered:
-            query_doc_IDs_ordered_list.append(str(i))
-
-        true_doc_IDs_list = []
-        for i in true_doc_IDs:
-            true_doc_IDs_list.append(str(i))
-
-        retrived_at_k_intersection_relavent_count = len(set(query_doc_IDs_ordered_list[:k]).intersection(true_doc_IDs_list))
-
         # Fill in code here
-
-        return retrived_at_k_intersection_relavent_count / len(true_doc_IDs)
+        recall_at_k = len(list(set(query_doc_IDs_ordered[:k]).intersection(true_doc_IDs))) / len(true_doc_IDs)
+        return recall_at_k
 
     def meanRecall(self, doc_IDs_ordered, query_ids, qrels, k):
         """
@@ -145,21 +119,10 @@ class Evaluation():
             The mean recall value as a number between 0 and 1
         """
 
-        qrel_dict = {}
-        for key, value in groupby(qrels,
-                                  key=itemgetter('query_num')):
-            ordered_res = [res['id'] for res in sorted(value, key=itemgetter('position'))]
-            qrel_dict[key] = ordered_res
-
-        qrel_list = []
-        for query_id in query_ids:
-            qrel_list.append(qrel_dict[str(query_id)])
-
-        recalls = []
-        for retrived, query_id, relavent in zip(doc_IDs_ordered, query_ids, qrel_list):
-            recalls.append(self.queryRecall(retrived, query_id, relavent,k))
-
         # Fill in code here
+        recalls = []
+        for idx, q in enumerate(query_ids):
+            recalls.append(self.queryRecall(doc_IDs_ordered[idx], query_ids[idx], get_relevant_docs(query_ids[idx], qrels), k))
 
         return np.mean(recalls)
 
@@ -185,15 +148,14 @@ class Evaluation():
         float
             The fscore value as a number between 0 and 1
         """
-
-        precison = self.queryPrecision(query_doc_IDs_ordered,query_id,true_doc_IDs,k)
-        recall = self.queryRecall(query_doc_IDs_ordered,query_id,true_doc_IDs,k)
+        # Fill in code here
+        precison = self.queryPrecision(query_doc_IDs_ordered, query_id, true_doc_IDs, k)
+        recall = self.queryRecall(query_doc_IDs_ordered, query_id, true_doc_IDs, k)
 
         if precison == 0 and recall == 0:
             return 0
-        # Fill in code here
 
-        return 2 * precison * recall / precison + recall
+        return (2 * precison * recall) / (precison + recall)
 
     def meanFscore(self, doc_IDs_ordered, query_ids, qrels, k):
         """
@@ -219,24 +181,11 @@ class Evaluation():
         float
             The mean fscore value as a number between 0 and 1
         """
-
-        qrel_dict = {}
-        for key, value in groupby(qrels,
-                                  key=itemgetter('query_num')):
-            ordered_res = [res['id'] for res in sorted(value, key=itemgetter('position'))]
-            qrel_dict[key] = ordered_res
-
-        qrel_list = []
-        for query_id in query_ids:
-            qrel_list.append(qrel_dict[str(query_id)])
-
-        f1s = []
-        for retrived, query_id, relavent in zip(doc_IDs_ordered, query_ids, qrel_list):
-            f1s.append(self.queryFscore(retrived, query_id, relavent,k))
-
         # Fill in code here
-
-        return np.mean(f1s)
+        f1_scores = []
+        for idx, q in enumerate(query_ids):
+            f1_scores.append(self.queryFscore(doc_IDs_ordered[idx], query_ids[idx], get_relevant_docs(query_ids[idx], qrels), k))
+        return np.mean(f1_scores)
 
     def queryNDCG(self, query_doc_IDs_ordered, query_id, true_doc_IDs, k):
         """

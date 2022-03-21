@@ -5,9 +5,9 @@ import numpy as np
 import time
 
 # Add your import statements here
-
-
-
+import itertools
+from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer, TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 class InformationRetrieval():
 
@@ -32,23 +32,15 @@ class InformationRetrieval():
 		None
 		"""
 		start = time.time()
-		idx = {}
-		for i, doc in enumerate(docs, 1):
-			# docID = docIDs[docs.index(doc)]
-			docID = i
-			terms = [term for sentence in doc for term in sentence]
-			for term, tf in list(Counter(terms).items()):
-				try:
-					idx[term].append([docID, tf])
-				except:
-					idx[term] = [[docID,tf]]
 
-		self.index = idx
 		self.docIDs = docIDs
+		self.count_vectorizer = CountVectorizer(min_df=1)
+		self.tfidf_transformer = TfidfTransformer(use_idf=True, smooth_idf=True)
+
+		self.term_doc_freq = self.count_vectorizer.fit_transform([' '.join(list(itertools.chain.from_iterable(x))) for x in docs])
+		self.index = self.term_doc_freq.T
 		end = time.time()
 		print("Index built in {} seconds".format(end-start))
-
-
 
 	def rank(self, queries):
 		"""
@@ -72,35 +64,23 @@ class InformationRetrieval():
 
 		#Fill in code here
 
-		idf = np.zeros(len(self.index.keys()))
-		n_docs = len(self.docIDs)
-		for i, term in enumerate(sorted(self.index.keys())):
-			idf[i] = math.log10(n_docs/len(self.index[term]))
-
-		tf_idf = {}
-		for id_ in self.docIDs:
-			tf_idf[id_] = np.zeros(len(self.index.keys()))
-
-		for i, term in enumerate(sorted(self.index.keys())):
-			for doc_id, freq in self.index[term]:
-				tf_idf[doc_id][i] = idf[i]*freq
+		self.tfidf_transformer.fit(self.term_doc_freq)
+		self.tfidf = self.tfidf_transformer.transform(self.term_doc_freq)
 
 		start = time.time()
-		for q in queries:
-			q_vector = np.zeros(len(self.index.keys()))
-			terms = [term for sent in q for term in sent]
-			term_counts = list(set(list(Counter(terms).items())))
-			for term, freq in term_counts:
-				# there are new terms in the query
-				if term in self.index:
-					idx = sorted(self.index.keys()).index(term)
-					q_vector[idx] = idf[idx]*freq
 
-			start = time.time()
+		query_sents = [' '.join(list(itertools.chain.from_iterable(x))) for x in queries]
+		query_counts = self.count_vectorizer.transform(query_sents)
+		query_tfidf = self.tfidf_transformer.transform(query_counts)
 
-			tf_idf_array = np.array(list(tf_idf.values()))
-			cos_sim = np.sum(tf_idf_array * q_vector, axis=1) / (np.linalg.norm(tf_idf_array, axis=1) * np.linalg.norm(q_vector))
-			doc_IDs_ordered.append(np.argsort(cos_sim)[::-1])
+		cos_sim = cosine_similarity(query_tfidf, self.tfidf)
+
+		for cos_similarity_vector in cos_sim:
+			top_n_doc_indexes = cos_similarity_vector.argsort()[::-1]
+			# convert doc_indexes to docIDs
+			top_n_docs = [self.docIDs[doc_index] for doc_index in top_n_doc_indexes]
+			doc_IDs_ordered.append(top_n_docs)
+
 		end = time.time()
 		print("Ranking complete in {} seconds".format(end-start))
 	
