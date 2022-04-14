@@ -160,7 +160,13 @@ class SearchEngine:
 		# Build document index
 		self.informationRetriever.buildIndex(processedDocs, doc_ids)
 		# Rank the documents for each query
-		doc_IDs_ordered = self.informationRetriever.rank(processedQueries)
+
+		# TODO: get to doc_IDS_ordered based on the model LSA
+		print('The model is: {}, with k: {}'.format(self.args.model, self.args.k))
+		if self.args.model == "lsa":
+			doc_IDs_ordered = self.informationRetriever.rank_by_lsa(processedQueries, self.args.k)
+		else:
+			doc_IDs_ordered = self.informationRetriever.rank(processedQueries)
 
 		# Read relevance judements
 		qrels = json.load(open(args.dataset + "cran_qrels.json", 'r'))[:]
@@ -247,6 +253,10 @@ if __name__ == "__main__":
 	                    help = "Tokenizer Type [naive|ptb]")
 	parser.add_argument('-custom', action = "store_true", 
 						help = "Take custom query as input")
+	parser.add_argument('-model', default="", 
+						help="Choose the model [lsa]")
+	parser.add_argument('-k', default=20, type=int, 
+						help="K important features [k]")
 	
 	# Parse the input arguments
 	args = parser.parse_args()
