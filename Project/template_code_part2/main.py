@@ -162,9 +162,12 @@ class SearchEngine:
 		# Rank the documents for each query
 
 		# TODO: get to doc_IDS_ordered based on the model LSA
-		print('The model is: {}, with k: {}'.format(self.args.model, self.args.k))
+		print('The model is: {}'.format(self.args.model))
 		if self.args.model == "lsa":
+			print('K is: {}'.format(self.args.k))
 			doc_IDs_ordered = self.informationRetriever.rank_by_lsa(processedQueries, self.args.k)
+		elif self.args.model == "query_expansion":
+			doc_IDs_ordered = self.informationRetriever.rank_by_query_expansion(processedQueries)
 		else:
 			doc_IDs_ordered = self.informationRetriever.rank(processedQueries)
 
