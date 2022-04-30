@@ -3,6 +3,7 @@ from collections import Counter
 import math
 import numpy as np
 import time
+import os
 
 # Add your import statements here
 import itertools
@@ -183,7 +184,16 @@ class InformationRetrieval():
 		doc_IDs_ordered = []
 
 		start = time.time()
-		U, S, Vt = np.linalg.svd(self.index.toarray())
+		SVD_COMPRESSED_FILE_PATH = 'compressedFiles/svd.npz'
+		if os.path.exists(SVD_COMPRESSED_FILE_PATH):
+			print('Loading SVD...')
+			savedSVD = np.load(SVD_COMPRESSED_FILE_PATH)
+			U, S, Vt = savedSVD['U'], savedSVD['S'], savedSVD['Vt']
+		else:
+			print('Computing and saving SVD...')
+			U, S, Vt = np.linalg.svd(self.index.toarray())
+			np.savez_compressed(SVD_COMPRESSED_FILE_PATH, U=U, S=S, Vt=Vt)
+
 		end = time.time()
 		print("Time to do SVD computation in {} seconds".format(end - start))
 
