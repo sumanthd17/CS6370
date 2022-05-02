@@ -27,7 +27,7 @@ class Word2VecEngine():
 	def __init__(self, args):
 		self.args = args
 
-		self.word2vec = Word2VecIndex()
+		self.word2vec = Word2VecIndex(args.train_word2vec)
 
 		self.tokenizer = Tokenization()
 		self.sentenceSegmenter = SentenceSegmentation()
@@ -542,6 +542,7 @@ if __name__ == "__main__":
 	parser.add_argument('--custom', action = "store_true", 
 						help = "Take custom query as input")
 	parser.add_argument('--method', default = "vector_space")
+	parser.add_argument('--train_word2vec', default=False, required=False)
 	
 	# Parse the input arguments
 	args = parser.parse_args()

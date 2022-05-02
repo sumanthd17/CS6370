@@ -4,24 +4,30 @@ from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 import numpy as np
+from gensim.models import Word2Vec
 
 
 class Word2VecIndex():
-    def __init__(self):
+    def __init__(self, train):
         self.index = None
         self.docIDs = None
-        self.model = gensim.downloader.load('word2vec-google-news-300')
+        self.train = train
+        # self.model = gensim.downloader.load('word2vec-google-news-300')
+        self.model = None
         
     def buildIndex(self, docs, docIDs):
         self.docIDs = docIDs
         index = []
 
         docs_ = list(itertools.chain.from_iterable(docs))
-        # model = Word2Vec(docs_, min_count=1)
+        if self.train:
+            self.model = Word2Vec(docs_, min_count=1)
+            vocab = self.model.wv.index_to_key
+        else:
+            self.model = gensim.downloader.load('word2vec-google-news-300')
+            vocab = self.model.index_to_key
 
-        vocab = self.model.index_to_key
-
-        if not os.path.exists('word2vec.npy'):
+        if not os.path.exists('word2vec.npy') or self.train:
             for doc in tqdm(docs):
                 count = 0
                 doc_emb = 0
@@ -29,15 +35,22 @@ class Word2VecIndex():
                     continue
                 for sent in doc:
                     for word in sent:
-                        if word != '.' and word in vocab:
-                            doc_emb += self.model[word]
-                            count += 1
+                        if self.train:
+                            if word != '.' and word in vocab:
+                                doc_emb += self.model.wv.get_vector(word)
+                                count += 1
+                        else:
+                            if word != '.' and word in vocab:
+                                doc_emb += self.model[word]
+                                count += 1
                 doc_emb /= count
                 index.append(doc_emb)
 
             np.save('word2vec.npy', index)
         else:
             index = np.load('word2vec.npy')
+
+        print(index[0].shape)
 
         self.index = index
 
@@ -51,18 +64,28 @@ class Word2VecIndex():
             q = list(itertools.chain.from_iterable(i))
             queries_.append(q)
 
-        vocab = self.model.index_to_key
+        if self.train:
+            vocab = self.model.wv.index_to_key
+        else:
+            vocab = self.model.index_to_key
+
         for q in tqdm(queries_):
             count = 0
             q_emb = 0
-            for sent in q:
-                for word in sent:
+            # for sent in q:
+            for word in q:
+                if self.train:
+                    if word != '.' and word in vocab:
+                        q_emb += self.model.wv.get_vector(word)
+                        count += 1
+                else:
                     if word != '.' and word in vocab:
                         q_emb += self.model[word]
                         count += 1
             q_emb /= count
             query_embs.append(q_emb)
 
+        print(query_embs[0].shape)
         cos_sim = cosine_similarity(query_embs, self.index)
         for cos_similarity_vector in cos_sim:
             top_n_doc_indexes = cos_similarity_vector.argsort()[::-1]
