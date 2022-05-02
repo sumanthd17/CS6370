@@ -53,12 +53,6 @@ class Word2VecEngine():
 		elif self.args.tokenizer == "ptb":
 			return self.tokenizer.pennTreeBank(text)
 
-	# def reduceInflection(self, text):
-	# 	"""
-	# 	Call the required stemmer/lemmatizer
-	# 	"""
-	# 	return self.inflectionReducer.reduce(text)
-
 	def removeStopwords(self, text):
 		"""
 		Call the required stopword remover
@@ -77,19 +71,15 @@ class Word2VecEngine():
 			segmentedQuery = self.segmentSentences(query)
 			segmentedQueries.append(segmentedQuery)
 		json.dump(segmentedQueries, open(self.args.out_folder + "segmented_queries.txt", 'w'))
+
 		# Tokenize queries
 		tokenizedQueries = []
 		for query in segmentedQueries:
 			tokenizedQuery = self.tokenize(query)
 			tokenizedQueries.append(tokenizedQuery)
 		json.dump(tokenizedQueries, open(self.args.out_folder + "tokenized_queries.txt", 'w'))
-		# Stem/Lemmatize queries
-		# reducedQueries = []
-		# for query in tokenizedQueries:
-		# 	reducedQuery = self.reduceInflection(query)
-		# 	reducedQueries.append(reducedQuery)
-		# json.dump(reducedQueries, open(self.args.out_folder + "reduced_queries.txt", 'w'))
-		# Remove stopwords from queries
+
+		# Remove stop words
 		stopwordRemovedQueries = []
 		for query in tokenizedQueries:
 			stopwordRemovedQuery = self.removeStopwords(query)
@@ -110,18 +100,14 @@ class Word2VecEngine():
 			segmentedDoc = self.segmentSentences(doc)
 			segmentedDocs.append(segmentedDoc)
 		json.dump(segmentedDocs, open(self.args.out_folder + "segmented_docs.txt", 'w'))
+
 		# Tokenize docs
 		tokenizedDocs = []
 		for doc in segmentedDocs:
 			tokenizedDoc = self.tokenize(doc)
 			tokenizedDocs.append(tokenizedDoc)
 		json.dump(tokenizedDocs, open(self.args.out_folder + "tokenized_docs.txt", 'w'))
-		# Stem/Lemmatize docs
-		# reducedDocs = []
-		# for doc in tokenizedDocs:
-		# 	reducedDoc = self.reduceInflection(doc)
-		# 	reducedDocs.append(reducedDoc)
-		# json.dump(reducedDocs, open(self.args.out_folder + "reduced_docs.txt", 'w'))
+
 		# Remove stopwords from docs
 		stopwordRemovedDocs = []
 		for doc in tokenizedDocs:
@@ -156,11 +142,8 @@ class Word2VecEngine():
 		processedDocs = self.preprocessDocs(docs)
 
 		# Build document index
-		# self.informationRetriever.buildIndex(processedDocs, doc_ids)
-		print('came here')
 		self.word2vec.buildIndex(processedDocs, doc_ids)
 		# Rank the documents for each query
-		# doc_IDs_ordered = self.informationRetriever.rank(processedQueries)
 		doc_IDs_ordered = self.word2vec.rank(processedQueries)
 
 		# Read relevance judements
@@ -372,18 +355,21 @@ class SearchEngine:
 			segmentedQuery = self.segmentSentences(query)
 			segmentedQueries.append(segmentedQuery)
 		json.dump(segmentedQueries, open(self.args.out_folder + "segmented_queries.txt", 'w'))
+
 		# Tokenize queries
 		tokenizedQueries = []
 		for query in segmentedQueries:
 			tokenizedQuery = self.tokenize(query)
 			tokenizedQueries.append(tokenizedQuery)
 		json.dump(tokenizedQueries, open(self.args.out_folder + "tokenized_queries.txt", 'w'))
+
 		# Stem/Lemmatize queries
 		reducedQueries = []
 		for query in tokenizedQueries:
 			reducedQuery = self.reduceInflection(query)
 			reducedQueries.append(reducedQuery)
 		json.dump(reducedQueries, open(self.args.out_folder + "reduced_queries.txt", 'w'))
+
 		# Remove stopwords from queries
 		stopwordRemovedQueries = []
 		for query in reducedQueries:
@@ -405,18 +391,21 @@ class SearchEngine:
 			segmentedDoc = self.segmentSentences(doc)
 			segmentedDocs.append(segmentedDoc)
 		json.dump(segmentedDocs, open(self.args.out_folder + "segmented_docs.txt", 'w'))
+
 		# Tokenize docs
 		tokenizedDocs = []
 		for doc in segmentedDocs:
 			tokenizedDoc = self.tokenize(doc)
 			tokenizedDocs.append(tokenizedDoc)
 		json.dump(tokenizedDocs, open(self.args.out_folder + "tokenized_docs.txt", 'w'))
+
 		# Stem/Lemmatize docs
 		reducedDocs = []
 		for doc in tokenizedDocs:
 			reducedDoc = self.reduceInflection(doc)
 			reducedDocs.append(reducedDoc)
 		json.dump(reducedDocs, open(self.args.out_folder + "reduced_docs.txt", 'w'))
+		
 		# Remove stopwords from docs
 		stopwordRemovedDocs = []
 		for doc in reducedDocs:
