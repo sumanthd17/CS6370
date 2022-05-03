@@ -191,6 +191,7 @@ class InformationRetrieval():
 			U, S, Vt = savedSVD['U'], savedSVD['S'], savedSVD['Vt']
 		else:
 			print('Computing and saving SVD...')
+			os.mkdir('compressedFiles')
 			U, S, Vt = np.linalg.svd(self.index.toarray())
 			np.savez_compressed(SVD_COMPRESSED_FILE_PATH, U=U, S=S, Vt=Vt)
 
