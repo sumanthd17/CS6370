@@ -132,7 +132,7 @@ class OneEditSpellCheck:
                 updated_query += " " + word
             elif word not in self.vocabulary:
                 correct_word = self.correct_word(word)
-                print('invalid word: {}, corrected word: {}'.format(word, correct_word))
+                # print('invalid word: {}, corrected word: {}'.format(word, correct_word))
                 updated_query += " " + correct_word
             else:
                 updated_query += " " + word
