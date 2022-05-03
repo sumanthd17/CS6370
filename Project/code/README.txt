@@ -1,5 +1,7 @@
 This folder contains the additional files required for Part 2 of the assignment, involving building a search engine application. Note that this code works for both Python 2 and Python 3. 
 
+Download  this https://drive.google.com/drive/folders/164DT__HFUAJl8y3OLDpNS7Wl_1CmAjEj?usp=sharing and put it inside Project/code/Datastore/
+
 The following files have been added:
 informationRetrieval.py and evaluation.py - Implement the corresponding tasks inside the functions in these files.
 
