@@ -128,8 +128,12 @@ class OneEditSpellCheck:
         # Updated query with correct spellings
         updated_query = ""
         for word in query.split():
-            if word not in self.vocabulary:
-                updated_query += " " + self.correct_word(word)
+            if '-' in word or '.' in word or ',' in word:
+                updated_query += " " + word
+            elif word not in self.vocabulary:
+                correct_word = self.correct_word(word)
+                print('invalid word: {}, corrected word: {}'.format(word, correct_word))
+                updated_query += " " + correct_word
             else:
                 updated_query += " " + word
 
