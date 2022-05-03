@@ -1,5 +1,5 @@
 from util import *
-
+import string
 # Add your import statements here
 from nltk.tokenize import TreebankWordTokenizer
 import re
@@ -45,5 +45,8 @@ class Tokenization():
 			A list of lists where each sub-list is a sequence of tokens
 		"""
 
-		ptb = TreebankWordTokenizer()
-		return [ptb.tokenize(sentence) for sentence in text]
+		tokenizedText = [TreebankWordTokenizer().tokenize(sentence) for sentence in text]
+
+		# Convert all tokens to lower case and remove tokens that are stand-alone punctuation marks
+		tokenizedText = [[word.lower() for word in sentence if not word in string.punctuation] for sentence in tokenizedText]
+		return tokenizedText
