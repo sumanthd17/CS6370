@@ -6,6 +6,8 @@ from informationRetrieval import InformationRetrieval
 from evaluation import Evaluation
 from bert import BERTIndex
 from word2vec import Word2VecIndex
+from SpellCheck import *
+import time
 
 from sys import version_info
 import argparse
@@ -430,13 +432,32 @@ class SearchEngine:
 		queries_json = json.load(open(args.dataset + "cran_queries.json", 'r'))[:]
 		query_ids, queries = [item["query number"] for item in queries_json], \
 								[item["query"] for item in queries_json]
-		# Process queries 
-		processedQueries = self.preprocessQueries(queries)
-
+		
 		# Read documents
 		docs_json = json.load(open(args.dataset + "cran_docs.json", 'r'))[:]
 		doc_ids, docs = [item["id"] for item in docs_json], \
 								[item["body"] for item in docs_json]
+		
+		if self.args.spellcheck == 'bigrams':
+			print('doing bigram spellcheck...')
+			bigramspellcheck = BigramSpellCheck(docs)
+			start = time.time()
+			for i, query in enumerate(queries):
+				queries[i] = bigramspellcheck.correct_words_in_query(query)
+			end = time.time()
+			print("Time to correct all queries {} seconds".format(end-start))
+		elif self.args.spellcheck == 'oneedit':
+			print('doing one edit spellcheck...')
+			bigramspellcheck = OneEditSpellCheck(docs)
+			start = time.time()
+			for i, query in enumerate(queries):
+				queries[i] = bigramspellcheck.correct_words_in_query(query)
+			end = time.time()
+			print("Time to correct all queries {} seconds".format(end-start))
+
+		# Process queries 
+		processedQueries = self.preprocessQueries(queries)
+
 		# Process documents
 		processedDocs = self.preprocessDocs(docs)
 
@@ -499,13 +520,24 @@ class SearchEngine:
 		#Get query
 		print("Enter query below")
 		query = input()
-		# Process documents
-		processedQuery = self.preprocessQueries([query])[0]
 
 		# Read documents
 		docs_json = json.load(open(args.dataset + "cran_docs.json", 'r'))[:]
 		doc_ids, docs = [item["id"] for item in docs_json], \
 							[item["body"] for item in docs_json]
+
+		if self.args.spellcheck == 'bigrams':
+			print('doing bigram spellcheck...')
+			bigramspellcheck = BigramSpellCheck(docs)
+			query = bigramspellcheck.correct_words_in_query(query)
+		elif self.args.spellcheck == 'oneedit':
+			print('doing one edit spellcheck...')
+			oneEditSpellCheck = OneEditSpellCheck(docs)
+			query = oneEditSpellCheck.correct_words_in_query(query)
+
+		# Process documents
+		processedQuery = self.preprocessQueries([query])[0]
+
 		# Process documents
 		processedDocs = self.preprocessDocs(docs)
 
@@ -540,6 +572,7 @@ if __name__ == "__main__":
 	parser.add_argument('--method', default = "vector_space")
 	parser.add_argument('--train_word2vec', default=False, required=False)
 	parser.add_argument('-k', default=220, type=int, help="K important features [k]")
+	parser.add_argument('--spellcheck', default='', required=False, help="spellcheck type [bigrams|oneedit]")
 
 	# Parse the input arguments
 	args = parser.parse_args()
