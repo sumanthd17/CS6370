@@ -490,7 +490,7 @@ class SearchEngine:
         if args.use_title:
             doc_ids, docs = (
                 [item["id"] for item in docs_json],
-                [item["title"] + item["body"] for item in docs_json],
+                [item["title"] * 3 + item["body"] for item in docs_json],
             )
         else:
             doc_ids, docs = (
@@ -1137,7 +1137,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--method", default="vector_space")
     parser.add_argument("--train_word2vec", default=False, required=False)
-    parser.add_argument("--use_title", default=True)
+    parser.add_argument("--use_title", default=False, type=bool)
     parser.add_argument("--spell_correction", default="", help="Spelling correction [bigrams|oneedit]")
     parser.add_argument("-k", default=220, type=int, help="K important features [k]")
 
