@@ -9,6 +9,11 @@ import itertools
 from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer, TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import json
+
+# Imports for query expansion using wordnet 
+import nltk
+from nltk.corpus import wordnet
+
 class InformationRetrieval():
 
 	def __init__(self):
