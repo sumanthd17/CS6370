@@ -443,7 +443,14 @@ class SearchEngine:
 		# Build document index
 		self.informationRetriever.buildIndex(processedDocs, doc_ids)
 		# Rank the documents for each query
-		doc_IDs_ordered = self.informationRetriever.rank(processedQueries)
+		print('The method is: {}'.format(self.args.method))
+		if self.args.method == "lsa":
+			print('K is: {}'.format(self.args.k))
+			doc_IDs_ordered = self.informationRetriever.rank_by_lsa(processedQueries, self.args.k)
+		elif self.args.method == "query_expansion":
+			doc_IDs_ordered = self.informationRetriever.rank_by_query_expansion(processedQueries)
+		else:
+			doc_IDs_ordered = self.informationRetriever.rank(processedQueries)
 
 		# Read relevance judements
 		qrels = json.load(open(args.dataset + "cran_qrels.json", 'r'))[:]
@@ -532,12 +539,13 @@ if __name__ == "__main__":
 						help = "Take custom query as input")
 	parser.add_argument('--method', default = "vector_space")
 	parser.add_argument('--train_word2vec', default=False, required=False)
-	
+	parser.add_argument('-k', default=220, type=int, help="K important features [k]")
+
 	# Parse the input arguments
 	args = parser.parse_args()
 
 	# Create an instance of the Search Engine
-	if args.method == "vector_space":
+	if args.method == "vector_space" or args.method == "query_expansion" or args.method == "lsa":
 		searchEngine = SearchEngine(args)
 		if args.custom:
 			searchEngine.handleCustomQuery()
